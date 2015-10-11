@@ -27,11 +27,11 @@ import (
 )
 
 const (
-	HeaderAcceptEncoding  = "Accept-Encoding"
-	HeaderContentEncoding = "Content-Encoding"
-	HeaderContentLength   = "Content-Length"
-	HeaderContentType     = "Content-Type"
-	HeaderVary            = "Vary"
+	_HEADER_ACCEPT_ENCODING  = "Accept-Encoding"
+	_HEADER_CONTENT_ENCODING = "Content-Encoding"
+	_HEADER_CONTENT_LENGTH   = "Content-Length"
+	_HEADER_CONTENT_TYPE     = "Content-Type"
+	_HEADER_VARY             = "Vary"
 )
 
 // Options represents a struct for specifying configuration options for the GZip middleware.
@@ -67,13 +67,13 @@ func Gziper(options ...Options) macaron.Handler {
 	opt := prepareOptions(options)
 
 	return func(ctx *macaron.Context) {
-		if !strings.Contains(ctx.Req.Header.Get(HeaderAcceptEncoding), "gzip") {
+		if !strings.Contains(ctx.Req.Header.Get(_HEADER_ACCEPT_ENCODING), "gzip") {
 			return
 		}
 
 		headers := ctx.Resp.Header()
-		headers.Set(HeaderContentEncoding, "gzip")
-		headers.Set(HeaderVary, HeaderAcceptEncoding)
+		headers.Set(_HEADER_CONTENT_ENCODING, "gzip")
+		headers.Set(_HEADER_VARY, _HEADER_ACCEPT_ENCODING)
 
 		// We've made sure compression level is valid in prepareGzipOptions,
 		// no need to check same error again.
@@ -103,8 +103,8 @@ type gzipResponseWriter struct {
 }
 
 func (grw gzipResponseWriter) Write(p []byte) (int, error) {
-	if len(grw.Header().Get(HeaderContentType)) == 0 {
-		grw.Header().Set(HeaderContentType, http.DetectContentType(p))
+	if len(grw.Header().Get(_HEADER_CONTENT_TYPE)) == 0 {
+		grw.Header().Set(_HEADER_CONTENT_TYPE, http.DetectContentType(p))
 	}
 	return grw.w.Write(p)
 }
