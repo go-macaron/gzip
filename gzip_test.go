@@ -1,5 +1,5 @@
 // Copyright 2013 Martini Authors
-// Copyright 2014 Unknwon
+// Copyright 2015 The Macaron Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License"): you may
 // not use this file except in compliance with the License. You may obtain
@@ -16,6 +16,8 @@
 package macaron
 
 import (
+	"bufio"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -62,5 +64,46 @@ func Test_Gzip(t *testing.T) {
 		So(strings.EqualFold(ce, "gzip"), ShouldBeTrue)
 
 		So(before, ShouldBeTrue)
+	})
+}
+
+type hijackableResponse struct {
+	Hijacked bool
+	header   http.Header
+}
+
+func newHijackableResponse() *hijackableResponse {
+	return &hijackableResponse{header: make(http.Header)}
+}
+
+func (h *hijackableResponse) Header() http.Header           { return h.header }
+func (h *hijackableResponse) Write(buf []byte) (int, error) { return 0, nil }
+func (h *hijackableResponse) WriteHeader(code int)          {}
+func (h *hijackableResponse) Flush()                        {}
+func (h *hijackableResponse) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	h.Hijacked = true
+	return nil, nil, nil
+}
+
+func Test_ResponseWriter_Hijack(t *testing.T) {
+	Convey("Hijack response", t, func() {
+		hijackable := newHijackableResponse()
+
+		m := macaron.New()
+		m.Use(Gziper())
+		m.Use(func(rw http.ResponseWriter) {
+			hj, ok := rw.(http.Hijacker)
+			So(ok, ShouldBeTrue)
+
+			hj.Hijack()
+		})
+
+		r, err := http.NewRequest("GET", "/", nil)
+		So(err, ShouldBeNil)
+
+		r.Header.Set(HeaderAcceptEncoding, "gzip")
+		m.ServeHTTP(hijackable, r)
+
+		So(hijackable.Hijacked, ShouldBeTrue)
 	})
 }
