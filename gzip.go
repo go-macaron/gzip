@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"strings"
 
-	gz "github.com/klauspost/compress/gzip"
+	"github.com/klauspost/compress/gzip"
 	"gopkg.in/macaron.v1"
 )
 
@@ -42,9 +42,9 @@ type Options struct {
 }
 
 func isCompressionLevelValid(level int) bool {
-	return level == gz.DefaultCompression ||
-		level == gz.ConstantCompression ||
-		(level >= gz.BestSpeed && level <= gz.BestCompression)
+	return level == gzip.DefaultCompression ||
+		level == gzip.ConstantCompression ||
+		(level >= gzip.BestSpeed && level <= gzip.BestCompression)
 }
 
 func prepareOptions(options []Options) Options {
@@ -77,7 +77,7 @@ func Gziper(options ...Options) macaron.Handler {
 
 		// We've made sure compression level is valid in prepareGzipOptions,
 		// no need to check same error again.
-		gz, err := gz.NewWriterLevel(ctx.Resp, opt.CompressionLevel)
+		gz, err := gzip.NewWriterLevel(ctx.Resp, opt.CompressionLevel)
 		if err != nil {
 			panic(err.Error())
 		}
@@ -98,7 +98,7 @@ func Gziper(options ...Options) macaron.Handler {
 }
 
 type gzipResponseWriter struct {
-	w *gz.Writer
+	w *gzip.Writer
 	macaron.ResponseWriter
 }
 
