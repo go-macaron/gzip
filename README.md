@@ -9,7 +9,7 @@ Middleware gzip provides compress to responses for [Macaron](https://github.com/
 ## Getting Help
 
 - [API Reference](https://gowalker.org/github.com/go-macaron/gzip)
-- [Documentation](http://go-macaron.com/docs/middlewares/gzip)
+- [Documentation](https://go-macaron.com/middlewares/gzip)
 
 ## Credits
 
