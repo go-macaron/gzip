@@ -46,7 +46,7 @@ func Test_Gzip(t *testing.T) {
 		So(err, ShouldBeNil)
 		m.ServeHTTP(resp, req)
 
-		_, ok := resp.HeaderMap[_HEADER_CONTENT_ENCODING]
+		_, ok := resp.Result().Header[_HEADER_CONTENT_ENCODING]
 		So(ok, ShouldBeFalse)
 
 		ce := resp.Header().Get(_HEADER_CONTENT_ENCODING)
@@ -57,7 +57,7 @@ func Test_Gzip(t *testing.T) {
 		req.Header.Set(_HEADER_ACCEPT_ENCODING, "gzip")
 		m.ServeHTTP(resp, req)
 
-		_, ok = resp.HeaderMap[_HEADER_CONTENT_ENCODING]
+		_, ok = resp.Result().Header[_HEADER_CONTENT_ENCODING]
 		So(ok, ShouldBeTrue)
 
 		ce = resp.Header().Get(_HEADER_CONTENT_ENCODING)
@@ -95,7 +95,8 @@ func Test_ResponseWriter_Hijack(t *testing.T) {
 			hj, ok := rw.(http.Hijacker)
 			So(ok, ShouldBeTrue)
 
-			hj.Hijack()
+			_, _, err := hj.Hijack()
+			So(err, ShouldBeNil)
 		})
 
 		r, err := http.NewRequest("GET", "/", nil)

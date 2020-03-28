@@ -29,7 +29,6 @@ import (
 const (
 	_HEADER_ACCEPT_ENCODING  = "Accept-Encoding"
 	_HEADER_CONTENT_ENCODING = "Content-Encoding"
-	_HEADER_CONTENT_LENGTH   = "Content-Length"
 	_HEADER_CONTENT_TYPE     = "Content-Type"
 	_HEADER_VARY             = "Vary"
 )
