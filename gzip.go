@@ -80,7 +80,12 @@ func Gziper(options ...Options) macaron.Handler {
 		if err != nil {
 			panic(err.Error())
 		}
-		defer gz.Close()
+
+		defer func() {
+			if _, ok := ctx.Resp.(gzipResponseWriter); ok {
+				gz.Close()
+			}
+		}()
 
 		gzw := gzipResponseWriter{gz, ctx.Resp}
 		ctx.Resp = gzw
@@ -94,8 +99,10 @@ func Gziper(options ...Options) macaron.Handler {
 
 		ctx.Next()
 
-		// delete content length after we know we have been written to
-		gzw.Header().Del("Content-Length")
+		if _, ok := ctx.Resp.(gzipResponseWriter); ok {
+			// delete content length after we know we have been written to
+			gzw.Header().Del("Content-Length")
+		}
 	}
 }
 
@@ -117,4 +124,18 @@ func (grw gzipResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 		return nil, nil, fmt.Errorf("the ResponseWriter doesn't support the Hijacker interface")
 	}
 	return hijacker.Hijack()
+}
+
+// DisableGzip rolls back all the changes made by gzipResponseWriter, that way the content won't be gzipped
+func DisableGzip(ctx *macaron.Context) {
+	if grw, ok := ctx.Resp.(gzipResponseWriter); ok {
+		origrw := grw.ResponseWriter
+		ctx.MapTo(origrw, (*http.ResponseWriter)(nil))
+		if _, ok := ctx.Render.(*macaron.DummyRender); !ok {
+			ctx.Render.SetResponseWriter(origrw)
+		}
+		ctx.Resp = origrw
+		ctx.Resp.Header().Del(_HEADER_CONTENT_ENCODING)
+		ctx.Resp.Header().Del(_HEADER_VARY)
+	}
 }

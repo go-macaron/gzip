@@ -108,3 +108,36 @@ func Test_ResponseWriter_Hijack(t *testing.T) {
 		So(hijackable.Hijacked, ShouldBeTrue)
 	})
 }
+
+func Test_DisableGzip(t *testing.T) {
+	Convey("Disable compression for a request with a middleware", t, func() {
+		m := macaron.New()
+		m.Use(Gziper())
+		data := "aaaaaaaaaaaaaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbbbbbbbbbb"
+		m.Get("/compressed", func() string { return data })
+		m.Get("/uncompressed", DisableGzip, func() string { return data })
+
+		// Test compressed
+		resp := httptest.NewRecorder()
+		req, err := http.NewRequest("GET", "/compressed", nil)
+		req.Header.Set(_HEADER_ACCEPT_ENCODING, "gzip")
+		So(err, ShouldBeNil)
+		m.ServeHTTP(resp, req)
+
+		ce := resp.Header().Get(_HEADER_CONTENT_ENCODING)
+		So(strings.EqualFold(ce, "gzip"), ShouldBeTrue)
+		So(strings.EqualFold(resp.Body.String(), data), ShouldBeFalse)
+
+		// Test uncompressed
+		resp = httptest.NewRecorder()
+		req, err = http.NewRequest("GET", "/uncompressed", nil)
+		req.Header.Set(_HEADER_ACCEPT_ENCODING, "gzip")
+		So(err, ShouldBeNil)
+		m.ServeHTTP(resp, req)
+
+		ce = resp.Header().Get(_HEADER_CONTENT_ENCODING)
+		So(strings.EqualFold(ce, "gzip"), ShouldBeFalse)
+		So(strings.EqualFold(resp.Body.String(), data), ShouldBeTrue)
+
+	})
+}
